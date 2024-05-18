@@ -1,0 +1,58 @@
+---
+- name: Jenkins Master
+  hosts: all
+  remote_user: ubuntu
+  become: yes
+  
+  tasks:
+    - name: Update package cache
+      apt:
+        update_cache: yes
+
+    - name: Install Python for Ansible
+      apt:
+        name: python3
+        state: present
+
+    - name: Install Java for Jenkins
+      apt:
+        name: default-jre
+        state: present
+
+    - name: Install Ansible
+      apt:
+        name: ansible
+        state: present
+
+    # - name: Add Jenkins apt key
+    #   apt_key:
+    #     url: "https://pkg.jenkins.io/debian-stable/jenkins.io.key"
+    #     state: present
+
+    - name: Add Jenkins apt key
+      shell: wget -q -O - https://pkg.jenkins.io/debian-stable/jenkins.io.key | sudo apt-key add -
+
+
+    - name: Add Jenkins apt repository
+      apt_repository:
+        repo: "deb https://pkg.jenkins.io/debian-stable binary/"
+        state: present
+
+    - name: Install Jenkins
+      apt:
+        name: jenkins
+        state: present
+
+    - name: Start Jenkins service
+      service:
+        name: jenkins
+        state: started
+        enabled: true
+
+    - name: Read initial admin password
+      become: yes
+      shell: cat /var/lib/jenkins/secrets/initialAdminPassword
+      register: initial_admin_password
+
+    - debug:
+        var: initial_admin_password.stdout_lines

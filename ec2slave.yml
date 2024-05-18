@@ -1,0 +1,55 @@
+---
+- name: Configure EC2 as Jenkins Slave and Install Terraform
+  hosts: all
+  remote_user: ubuntu
+  become: yes
+  
+  tasks:
+    - name: Create Jenkins user
+      user:
+        name: jenkins
+        state: present
+        shell: /bin/bash
+        createhome: yes
+
+    - name: Create Jenkins home directory
+      file:
+        path: /var/lib/jenkins
+        state: directory
+        owner: jenkins
+        group: jenkins
+
+    - name: Update packages
+      apt:
+        update_cache: yes
+
+    - name: Install OpenJDK 11 JDK
+      apt:
+        name: openjdk-11-jdk
+        state: present
+
+    - name: Install unzip
+      apt:
+        name: unzip
+        state: present
+
+    - name: Download Terraform
+      get_url:
+        url: "https://releases.hashicorp.com/terraform/0.15.0/terraform_0.15.0_linux_amd64.zip"
+        dest: "/tmp/terraform.zip"
+
+    - name: Unzip Terraform
+      unarchive:
+        src: "/tmp/terraform.zip"
+        dest: "/usr/local/bin/"
+        remote_src: yes
+
+    - name: Set Terraform permissions
+      file:
+        path: "/usr/local/bin/terraform"
+        mode: '0755'
+
+    # - name: Install Git
+    #   apt:
+    #     name: git
+    #     state: present
